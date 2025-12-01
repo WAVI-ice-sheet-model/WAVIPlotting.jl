@@ -1,7 +1,5 @@
 module WAVIPlotting
 
-using NCDatasets
-using Plots
 using ArgParse
 
 export wavi_plot_main
@@ -30,10 +28,10 @@ function parse_commandline()
             required = true
         "--output", "-o"
             help = "Output file path (default: plot.png)"
-            default = "plot.png"
+            default = nothing
         "--format", "-f"
-            help = "Output format (png, pdf, svg)"
-            default = "png"
+            help = "Output format (jpg, png, pdf, svg)"
+            default = "jpg"
         "--dpi"
             help = "DPI for raster outputs"
             arg_type = Int
@@ -67,7 +65,8 @@ function wavi_plot_main(args=ARGS)
         error("Unknown plot type: $plot_type")
     end
 
-    println("Plot saved to: $output")
+    println("Press enter to close")
+    readline()
 end
 
 end

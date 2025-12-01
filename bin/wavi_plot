@@ -1,0 +1,17 @@
+#!/usr/bin/env julia
+
+# Get the directory of this script
+script_dir = @__DIR__
+project_dir = dirname(script_dir)
+
+# Activate the package environment
+import Pkg
+Pkg.activate(project_dir)
+
+# Add the package to the load path
+push!(LOAD_PATH, joinpath(project_dir, "src"))
+
+using WAVIPlotting
+
+# Run the main function with command-line arguments
+WAVIPlotting.wavi_plot_main(ARGS)

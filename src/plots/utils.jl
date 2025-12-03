@@ -1,6 +1,6 @@
 
-function build_figure()
-    fig = Figure(size = (1500, 700), layout = GridLayout(tellwidths = true))
+function build_figure(;size = (1500, 700))
+    fig = Figure(size = size, layout = GridLayout(tellwidths = true))
     return fig
 end
 

@@ -105,10 +105,11 @@ function build_interface(fig, yh, nt, varnames; n_heatmaps = 1)
     return y_slider, axes, varname_menu, time_slider
 end
 
-function update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME; t, yidx)
+function update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
     empty!(axes[end])
+    figure_title.text = "$varname at time = $(round(TIME[t], digits = 2))"
     for (i, file) in enumerate(files)
-        axes[i].title = "$varname at time = $(round(TIME[t], digits = 2))"
+        axes[i].title = "File: `$file`"
         ds = Dataset(files[i])
         da = ds[varname]
         # Update heatmap
@@ -163,7 +164,12 @@ function plot_mismip_plus(files, output, format, dpi)
     heatmap_line_plot = plot_heatmap_cross_section_line(fig, axes[1], xh, yh, da, TIME)
     line = plot_line(fig, axes[end], xh, da, TIME)
 
-    update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, t = 1, yidx = 1)
+    figure_title = Label(fig[0, :],
+        "$varname at time = $(round(TIME[time_slider.value[]], digits=2))",
+        fontsize = 30
+    )
+
+    update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t = 1, yidx = 1)
     leg = axislegend(axes[end], position = :rt, framevisible = true, framecolor = :transparent, backgroundcolor = :transparent)
 
     # Menu callbacks
@@ -172,7 +178,7 @@ function plot_mismip_plus(files, output, format, dpi)
         t = time_slider.value[]
         yidx = y_slider.value[]
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME; t, yidx)
+	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
     end
 
     # Slider callbacks
@@ -185,14 +191,14 @@ function plot_mismip_plus(files, output, format, dpi)
         y_line = fill(yh[yidx], length(xh))
         heatmap_line_plot[1][] = Point2f.(xh, y_line)
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME; t, yidx)
+	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
     end
     ## time slider callback
     on(time_slider.value) do t
         varname = varname_menu.selection[]
         yidx = y_slider.value[]
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME; t, yidx)
+	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
     end
 
     if isnothing(output)

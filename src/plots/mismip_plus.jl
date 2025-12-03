@@ -68,7 +68,7 @@ function plot_line(fig, ax, xh, da, TIME)
     return line
 end
 
-function build_interface(fig, yh, nt, varnames; n_heatmaps = 1)
+function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     y_slider = Slider(fig[1, 1], range = 1:length(yh), startvalue = 1, horizontal = false)
     axes = []
     # Build a heatmap axis per netCDF file
@@ -97,17 +97,24 @@ function build_interface(fig, yh, nt, varnames; n_heatmaps = 1)
 
     slider_grid = SliderGrid(
         fig[n_heatmaps + 3, 2],
-        (label = "Timestep", range = 1:nt, format = "{:.1d}", startvalue = 1),
+        (
+            label = "Timestep",
+            range = 1:length(TIME),
+            format = i -> string(round(TIME[i], digits = 0)),
+            startvalue = 1,
+        ),
         tellheight = true,
     )
+
     time_slider = slider_grid.sliders[1]
+
 
     return y_slider, axes, varname_menu, time_slider
 end
 
 function update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
     empty!(axes[end])
-    figure_title.text = "$varname at time = $(round(TIME[t], digits = 2))"
+    figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
     for (i, file) in enumerate(files)
         axes[i].title = "File: `$file`"
         ds = Dataset(files[i])
@@ -148,7 +155,7 @@ function plot_mismip_plus(files, output, format, dpi)
     nt = length(TIME)
 
     fig = build_figure(;size = (fig_width, fig_height))
-    y_slider, axes, varname_menu, time_slider = build_interface(fig, yh, nt, varnames; n_heatmaps = length(files))
+    y_slider, axes, varname_menu, time_slider = build_interface(fig, yh, TIME, varnames; n_heatmaps = length(files))
 
     # Initialise plots
     varname = varnames[1]

@@ -16,7 +16,7 @@ function build_heatmap_axis(fig; row = 1)
     return ax
 end
 
-function plot_heatmap(fig, ax, xh, yh, da, TIME)
+function plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
     data0 = da[:, :, 1] # Initial slice
     clims = get_clims(data0)
 
@@ -30,9 +30,6 @@ function plot_heatmap(fig, ax, xh, yh, da, TIME)
         interpolate = false,
     )
 
-    ## Round float tick values to int (stops axes moving around)
-    #int_tick(x) = string.(round.(Int, x))
-    #Colorbar(fig[1, 3], heatmap; tickformat = int_tick)
     return heatmap
 end
 
@@ -112,16 +109,16 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     return y_slider, axes, varname_menu, time_slider
 end
 
-function update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
+function update_plot(axes, files, heatmaps_vector, heatmap_cbar, varname, xh, yh, TIME, figure_title; t, yidx)
     empty!(axes[end])
     figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
+    minval, maxval = floatmax(Float32), floatmin(Float32)
     for (i, file) in enumerate(files)
         axes[i].title = "File: `$file`"
         ds = Dataset(files[i])
         da = ds[varname]
         # Update heatmap
         heatmaps_vector[i][3][] = @view da[:, :, t]
-        heatmaps_vector[i].colorrange[] = get_clims(@view da[:, :, t])
 
         # Update bottom line axis to reflect new time selection
         line = lines!(
@@ -132,9 +129,17 @@ function update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure
             #color = :red,
             linewidth = 2,
         )
+
+	minval, maxval = minimum(@view da[:, :, t]), maximum(@view da[:, :, t])
+    end
+
+    println(minval, "\t", maxval)
+    for (i, file) in enumerate(files)
+        heatmaps_vector[i].colorrange[] = (minval, maxval)
     end
 
     axes[end].ylabel = "$varname"
+    heatmap_cbar.label = "$varname"
 
     #line[1][] = Point2f.(xh, @view da[:, yidx, t])
 
@@ -164,9 +169,14 @@ function plot_mismip_plus(files, output, format, dpi)
     heatmaps_vector = []
 
     for (i, file) in enumerate(files)
-	heatmap = plot_heatmap(fig, axes[i], xh, yh, da, TIME)
+	heatmap = plot_heatmap(fig, axes[i], xh, yh, da, varname, TIME)
 	push!(heatmaps_vector, heatmap)
     end
+
+    # Add Colourbar
+    ## Round float tick values to int (stops axes moving around)
+    int_tick(x) = string.(round.(Int, x))
+    heatmap_cbar = Colorbar(fig[1:end, 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
     heatmap_line_plot = plot_heatmap_cross_section_line(fig, axes[1], xh, yh, da, TIME)
     line = plot_line(fig, axes[end], xh, da, TIME)
@@ -176,7 +186,7 @@ function plot_mismip_plus(files, output, format, dpi)
         fontsize = 30
     )
 
-    update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t = 1, yidx = 1)
+    update_plot(axes, files, heatmaps_vector, heatmap_cbar, varname, xh, yh, TIME, figure_title; t = 1, yidx = 1)
     leg = axislegend(axes[end], position = :rt, framevisible = true, framecolor = :transparent, backgroundcolor = :transparent)
 
     # Menu callbacks
@@ -185,7 +195,7 @@ function plot_mismip_plus(files, output, format, dpi)
         t = time_slider.value[]
         yidx = y_slider.value[]
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
+	update_plot(axes, files, heatmaps_vector, heatmap_cbar, varname, xh, yh, TIME, figure_title; t, yidx)
     end
 
     # Slider callbacks
@@ -198,14 +208,14 @@ function plot_mismip_plus(files, output, format, dpi)
         y_line = fill(yh[yidx], length(xh))
         heatmap_line_plot[1][] = Point2f.(xh, y_line)
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
+	update_plot(axes, files, heatmaps_vector, heatmap_cbar, varname, xh, yh, TIME, figure_title; t, yidx)
     end
     ## time slider callback
     on(time_slider.value) do t
         varname = varname_menu.selection[]
         yidx = y_slider.value[]
 
-	update_plot(axes, files, heatmaps_vector, varname, xh, yh, TIME, figure_title; t, yidx)
+	update_plot(axes, files, heatmaps_vector, heatmap_cbar, varname, xh, yh, TIME, figure_title; t, yidx)
     end
 
     if isnothing(output)

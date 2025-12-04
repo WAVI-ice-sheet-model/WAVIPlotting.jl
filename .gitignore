@@ -28,4 +28,4 @@ LocalPreferences.toml
 JuliaLocalPreferences.toml
 
 # Custom
-outputs/
+outputs*/

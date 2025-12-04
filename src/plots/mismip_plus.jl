@@ -11,8 +11,8 @@ Get data range for current timestep across all netCDF files.
 """
 function get_arr_range(files, varname, t)
     minval, maxval = floatmax(Float32), floatmin(Float32)
-    for (i, file) in enumerate(files)
-        ds = Dataset(files[i])
+    for file in files
+        ds = Dataset(file)
         da = ds[varname]
 
         minval = min(minval, minimum(@view da[:, :, t]))

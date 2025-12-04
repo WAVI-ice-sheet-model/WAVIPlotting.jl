@@ -1,9 +1,4 @@
 
-function build_figure(;size = (1500, 700))
-    fig = Figure(size = size, layout = GridLayout(tellwidths = true))
-    return fig
-end
-
 get_clims(arr) = (minimum(arr), maximum(arr))
 
 function get_coords(ds)

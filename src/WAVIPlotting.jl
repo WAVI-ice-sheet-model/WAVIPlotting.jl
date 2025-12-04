@@ -15,27 +15,27 @@ function parse_commandline()
     s = ArgParseSettings(
         description = "WaviPlot: Plotting tool for ice sheet model outputs",
         version = "0.0.1",
-        add_version = true
+        add_version = true,
     )
 
     @add_arg_table! s begin
         "plot_type"
-            help = "Type of plot to generate (e.g., mismip_plus)"
-            required = true
+        help = "Type of plot to generate (e.g., mismip_plus)"
+        required = true
         "files"
-            help = "NetCDF output files to plot"
-            nargs = '+'
-            required = true
+        help = "NetCDF output files to plot"
+        nargs = '+'
+        required = true
         "--output", "-o"
-            help = "Output file path (default: plot.png)"
-            default = nothing
+        help = "Output file path (default: plot.png)"
+        default = nothing
         "--format", "-f"
-            help = "Output format (jpg, png, pdf, svg)"
-            default = "jpg"
+        help = "Output format (jpg, png, pdf, svg)"
+        default = "jpg"
         "--dpi"
-            help = "DPI for raster outputs"
-            arg_type = Int
-            default = 300
+        help = "DPI for raster outputs"
+        arg_type = Int
+        default = 300
     end
 
     return parse_args(s)
@@ -46,7 +46,7 @@ end
 
 Main entry point for the wavi_plot command-line tool.
 """
-function wavi_plot_main(args=ARGS)
+function wavi_plot_main(args = ARGS)
     parsed_args = parse_commandline()
 
     plot_type = parsed_args["plot_type"]

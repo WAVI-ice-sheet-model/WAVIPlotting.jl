@@ -51,7 +51,7 @@ function wavi_plot_main(args = ARGS)
     @info "Output: $output"
 
     if plot_type == "mismip_plus"
-        plot_mismip_plus(files, output)
+        plot_mismip_plus(files; output = output)
     else
         error("Unknown plot type: $plot_type")
     end

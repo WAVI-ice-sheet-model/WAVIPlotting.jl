@@ -133,11 +133,11 @@ function update_colorbar_slider_interval(colorbar_slider, minval, maxval)
 end
 
 """
-    plot_mismip_plus(files, output)
+    plot_mismip_plus(files; output = nothing)
 
 Plot MISMIP+ results.
 """
-function plot_mismip_plus(files, output)
+function plot_mismip_plus(files; output = nothing)
     ds = Dataset(files[1])
 
     fig_width = 1500

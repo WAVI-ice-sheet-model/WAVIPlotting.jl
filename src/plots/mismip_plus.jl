@@ -141,7 +141,7 @@ function plot_mismip_plus(files, output, format, dpi)
     ds = Dataset(files[1])
 
     fig_width = 1500
-    fig_height = 350 * length(files)
+    fig_height = 350 * (length(files) + 1)
 
     # Filter out variables that are not 3D
     varnames = filter(x -> ndims(ds[x]) == 3, keys(ds))

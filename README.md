@@ -5,6 +5,8 @@
 
 A Julia package for plotting ice sheet model netCDF outputs from [WAVI.jl](https://github.com/WAVI-ice-sheet-model/WAVI.jl) for MISMIP+ experiments.
 
+![](./docs/assets/example_plot_window.jpg)
+
 ## Installation
 
 ### From GitHub

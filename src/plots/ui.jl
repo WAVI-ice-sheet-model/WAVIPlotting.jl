@@ -87,13 +87,14 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     # Create a sub-layout for the slider and toggle
     slider_layout = GridLayout(fig[n_heatmaps+4, 2])
 
-    min_label = Label(slider_layout[1, 1], tellwidth = true)
-    colorbar_slider = IntervalSlider(slider_layout[1, 2], linewidth = slider_line_width)
-    max_label = Label(slider_layout[1, 3], tellwidth = true)
+    Label(slider_layout[1, 1], "Colourbar", tellwidth = true)
+    min_label = Label(slider_layout[1, 2], tellwidth = true)
+    colorbar_slider = IntervalSlider(slider_layout[1, 3], linewidth = slider_line_width)
+    max_label = Label(slider_layout[1, 4], tellwidth = true)
 
     # Add toggle to lock the range
-    lock_toggle = Toggle(slider_layout[1, 4], active = false)
-    Label(slider_layout[1, 5], "Lock over timesteps")
+    lock_toggle = Toggle(slider_layout[1, 5], active = false)
+    Label(slider_layout[1, 6], "Lock over timesteps")
 
     return y_slider,
     axes,

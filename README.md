@@ -31,7 +31,7 @@ julia --project=. -e 'using Pkg; Pkg.instantiate()'
 In this case, since you've cloned the script, you can run it directly from the `bin` directory:
 
 ```bash
-bin/wavi_plot mismip_plus file1.nc file2.nc -o comparison.jpg --format jpg --dpi 300
+bin/wavi_plot mismip_plus file1.nc file2.nc
 ```
 
 ## Setting up the Command-Line Tool
@@ -60,7 +60,7 @@ After installing the package, the `wavi_plot` executable is placed in the packag
 # Add the bin directory to PATH (adjust the version path as needed)
 export PATH="$HOME/.julia/packages/WAVIPlotting/<version>/bin:$PATH"
 # Now you can run the command directly
-wavi_plot mismip_plus file1.nc file2.nc -o comparison.jpg --dpi 300
+wavi_plot mismip_plus file1.nc file2.nc
 ```
 
 Alternatively, you can call the script directly without modifying `PATH`:

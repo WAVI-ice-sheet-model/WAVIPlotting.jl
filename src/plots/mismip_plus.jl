@@ -67,10 +67,16 @@ end
 
 function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     slider_line_width = 15
-    y_slider = Slider(fig[1, 1], range = 1:length(yh), startvalue = 1, horizontal = false, linewidth = slider_line_width)
+    y_slider = Slider(
+        fig[1, 1],
+        range = 1:length(yh),
+        startvalue = 1,
+        horizontal = false,
+        linewidth = slider_line_width,
+    )
     axes = []
     # Build a heatmap axis per netCDF file
-    for i in 1:n_heatmaps
+    for i = 1:n_heatmaps
         push!(axes, build_heatmap_axis(fig; row = i))
     end
     # Set last axis to be the cross-sectional line plot
@@ -89,12 +95,12 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     # Add menu for variable selection
     # Ref: https://docs.makie.org/dev/reference/blocks/menu
     menu_layout = GridLayout(tellwidths = true)
-    fig[n_heatmaps + 2, 2] = menu_layout # Using this to match the layout of the slider grid
+    fig[n_heatmaps+2, 2] = menu_layout # Using this to match the layout of the slider grid
     Label(menu_layout[1, 1], "Variable", tellwidth = true)
     varname_menu = Menu(menu_layout[1, 2], options = varnames, default = varnames[1])
 
     slider_grid = SliderGrid(
-        fig[n_heatmaps + 3, 2],
+        fig[n_heatmaps+3, 2],
         (
             label = "Timestep",
             range = 1:length(TIME),
@@ -108,7 +114,7 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     time_slider = slider_grid.sliders[1]
 
     # Create a sub-layout for the slider and toggle
-    slider_layout = GridLayout(fig[n_heatmaps + 4, 2])
+    slider_layout = GridLayout(fig[n_heatmaps+4, 2])
 
     min_label = Label(slider_layout[1, 1], tellwidth = true)
     colorbar_slider = IntervalSlider(slider_layout[1, 2], linewidth = slider_line_width)
@@ -118,7 +124,14 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     lock_toggle = Toggle(slider_layout[1, 4], active = false)
     Label(slider_layout[1, 5], "Lock over timesteps")
 
-    return y_slider, axes, varname_menu, time_slider, colorbar_slider, lock_toggle, min_label, max_label
+    return y_slider,
+    axes,
+    varname_menu,
+    time_slider,
+    colorbar_slider,
+    lock_toggle,
+    min_label,
+    max_label
 end
 
 function get_arr_range(files, varname, t)
@@ -145,7 +158,21 @@ function get_global_limits(files, varname)
     return minval, maxval
 end
 
-function update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = true)
+function update_plot(
+    axes,
+    files,
+    heatmaps_vector,
+    heatmap_cbar,
+    colorbar_slider,
+    varname,
+    xh,
+    yh,
+    TIME,
+    figure_title;
+    t,
+    yidx,
+    update_limits = true,
+)
     empty!(axes[end])
     figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
     for (i, file) in enumerate(files)
@@ -218,8 +245,15 @@ function plot_mismip_plus(files, output, format, dpi)
 
     nt = length(TIME)
 
-    fig = build_figure(;size = (fig_width, fig_height))
-    y_slider, axes, varname_menu, time_slider, colorbar_slider, lock_toggle, min_label, max_label = build_interface(fig, yh, TIME, varnames; n_heatmaps = length(files))
+    fig = build_figure(; size = (fig_width, fig_height))
+    y_slider,
+    axes,
+    varname_menu,
+    time_slider,
+    colorbar_slider,
+    lock_toggle,
+    min_label,
+    max_label = build_interface(fig, yh, TIME, varnames; n_heatmaps = length(files))
 
     # Initialise plots
     varname = varnames[1]
@@ -228,21 +262,23 @@ function plot_mismip_plus(files, output, format, dpi)
     heatmaps_vector = []
 
     for (i, file) in enumerate(files)
-	heatmap = plot_heatmap(fig, axes[i], xh, yh, da, varname, TIME)
-	push!(heatmaps_vector, heatmap)
+        heatmap = plot_heatmap(fig, axes[i], xh, yh, da, varname, TIME)
+        push!(heatmaps_vector, heatmap)
     end
 
     # Add Colourbar
     ## Round float tick values to int (stops axes moving around)
     int_tick(x) = string.(round.(Int, x))
-    heatmap_cbar = Colorbar(fig[1:end, 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
+    heatmap_cbar =
+        Colorbar(fig[1:end, 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
     heatmap_line_plot = plot_heatmap_cross_section_line(fig, axes[1], xh, yh, da, TIME)
     line = plot_line(fig, axes[end], xh, da, TIME)
 
-    figure_title = Label(fig[0, :],
+    figure_title = Label(
+        fig[0, :],
         "$varname at time = $(round(TIME[time_slider.value[]], digits=2))",
-        fontsize = 30
+        fontsize = 30,
     )
 
     # Initialise slider range with global limits
@@ -251,13 +287,33 @@ function plot_mismip_plus(files, output, format, dpi)
 
     ## Colourbar range setting callback
     on(colorbar_slider.interval) do t
-        min_label.text = string(round(t[1], digits=2))
-        max_label.text = string(round(t[2], digits=2))
+        min_label.text = string(round(t[1], digits = 2))
+        max_label.text = string(round(t[2], digits = 2))
         update_colorbar(files, heatmaps_vector, t[1], t[2])
     end
 
-    update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t = 1, yidx = 1, update_limits = true)
-    leg = axislegend(axes[end], position = :rt, framevisible = true, framecolor = :transparent, backgroundcolor = :transparent)
+    update_plot(
+        axes,
+        files,
+        heatmaps_vector,
+        heatmap_cbar,
+        colorbar_slider,
+        varname,
+        xh,
+        yh,
+        TIME,
+        figure_title;
+        t = 1,
+        yidx = 1,
+        update_limits = true,
+    )
+    leg = axislegend(
+        axes[end],
+        position = :rt,
+        framevisible = true,
+        framecolor = :transparent,
+        backgroundcolor = :transparent,
+    )
 
     # Menu callbacks
     ## Selecting variable
@@ -269,9 +325,23 @@ function plot_mismip_plus(files, output, format, dpi)
         global_min, global_max = get_global_limits(files, varname)
         update_colorbar_slider_range(colorbar_slider, global_min, global_max)
 
-        update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = true)
+        update_plot(
+            axes,
+            files,
+            heatmaps_vector,
+            heatmap_cbar,
+            colorbar_slider,
+            varname,
+            xh,
+            yh,
+            TIME,
+            figure_title;
+            t,
+            yidx,
+            update_limits = true,
+        )
         #minval, maxval = get_arr_range(files, varname, t)
-	    #println(minval, "\t", maxval)
+        #println(minval, "\t", maxval)
     end
 
     # Slider callbacks
@@ -284,14 +354,42 @@ function plot_mismip_plus(files, output, format, dpi)
         y_line = fill(yh[yidx], length(xh))
         heatmap_line_plot[1][] = Point2f.(xh, y_line)
 
-	    update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = false)
+        update_plot(
+            axes,
+            files,
+            heatmaps_vector,
+            heatmap_cbar,
+            colorbar_slider,
+            varname,
+            xh,
+            yh,
+            TIME,
+            figure_title;
+            t,
+            yidx,
+            update_limits = false,
+        )
     end
     ## time slider callback
     on(time_slider.value) do t
         varname = varname_menu.selection[]
         yidx = y_slider.value[]
 
-	    update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = !lock_toggle.active[])
+        update_plot(
+            axes,
+            files,
+            heatmaps_vector,
+            heatmap_cbar,
+            colorbar_slider,
+            varname,
+            xh,
+            yh,
+            TIME,
+            figure_title;
+            t,
+            yidx,
+            update_limits = !lock_toggle.active[],
+        )
     end
     if isnothing(output)
         display(fig)

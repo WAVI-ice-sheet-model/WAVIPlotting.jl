@@ -175,7 +175,7 @@ function plot_mismip_plus(files, output, format, dpi)
     ## Round float tick values to int (stops axes moving around)
     int_tick(x) = string.(round.(Int, x))
     heatmap_cbar =
-        Colorbar(fig[1:end, 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
+        Colorbar(fig[1:length(files), 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
     heatmap_line_plot = plot_heatmap_cross_section_line(fig, axes[1], xh, yh, da, TIME)
     line = plot_line(fig, axes[end], xh, da, TIME)

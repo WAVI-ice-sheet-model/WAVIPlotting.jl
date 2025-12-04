@@ -4,6 +4,11 @@ using NCDatasets
 include("utils.jl")
 include("ui.jl")
 
+"""
+    get_arr_range(files, varname, t)
+
+Get data range for current timestep across all netCDF files.
+"""
 function get_arr_range(files, varname, t)
     minval, maxval = floatmax(Float32), floatmin(Float32)
     for (i, file) in enumerate(files)
@@ -16,6 +21,11 @@ function get_arr_range(files, varname, t)
     return minval, maxval
 end
 
+"""
+    get_global_limits(files, varname)
+
+Get global data range for given variable across all netCDF files.
+"""
 function get_global_limits(files, varname)
     minval, maxval = floatmax(Float32), floatmin(Float32)
     for file in files
@@ -28,6 +38,11 @@ function get_global_limits(files, varname)
     return minval, maxval
 end
 
+"""
+    update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = true)
+
+Update plot for given variable, timestep and y-index.
+"""
 function update_plot(
     axes,
     files,
@@ -86,22 +101,42 @@ function update_plot(
     return cmin, cmax
 end
 
+"""
+    update_colorbar(files, heatmaps_vector, minval, maxval)
+
+Update heatmap color ranges.
+"""
 function update_colorbar(files, heatmaps_vector, minval, maxval)
     for (i, file) in enumerate(files)
         heatmaps_vector[i].colorrange[] = (minval, maxval)
     end
 end
 
+"""
+    update_colorbar_slider_range(colorbar_slider, minval, maxval)
+
+Update colorbar slider range.
+"""
 function update_colorbar_slider_range(colorbar_slider, minval, maxval)
     @debug "Updating colorbar slider range to $(minval) to $(maxval)"
     colorbar_slider.range[] = LinRange(minval, maxval, 1000)
 end
 
+"""
+    update_colorbar_slider_interval(colorbar_slider, minval, maxval)
+
+Update colorbar slider interval.
+"""
 function update_colorbar_slider_interval(colorbar_slider, minval, maxval)
     @debug "Updating colorbar slider interval to $(minval) to $(maxval)"
     set_close_to!(colorbar_slider, minval, maxval)
 end
 
+"""
+    plot_mismip_plus(files, output, format, dpi)
+
+Plot MISMIP+ results.
+"""
 function plot_mismip_plus(files, output, format, dpi)
     ds = Dataset(files[1])
 

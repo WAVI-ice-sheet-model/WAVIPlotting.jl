@@ -1,8 +1,19 @@
+
+"""
+    build_figure(; size = (1500, 700))
+
+Build and return figure object with a grid layout for heatmaps and line plot.
+"""
 function build_figure(; size = (1500, 700))
     fig = Figure(size = size, layout = GridLayout(tellwidths = true))
     return fig
 end
 
+"""
+    build_heatmap_axis(fig; row = 1)
+
+Build and return heatmap axis object.
+"""
 function build_heatmap_axis(fig; row = 1)
     @info "Row: $row"
     ax = Axis(
@@ -16,6 +27,11 @@ function build_heatmap_axis(fig; row = 1)
     return ax
 end
 
+"""
+    build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
+
+Build Makie interface for heatmaps and line plot.
+"""
 function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     slider_line_width = 15
     y_slider = Slider(
@@ -85,6 +101,11 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     max_label
 end
 
+"""
+    plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
+
+Plot heatmap for initial slice of variable.
+"""
 function plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
     data0 = da[:, :, 1] # Initial slice
     clims = get_clims(data0)
@@ -102,6 +123,11 @@ function plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
     return heatmap
 end
 
+"""
+    plot_heatmap_cross_section_line(fig, ax, xh, yh, da, TIME)
+
+Plot cross-section line over first heatmap.
+"""
 function plot_heatmap_cross_section_line(fig, ax, xh, yh, da, TIME)
     # Line plot across a selected y-index (initially first y)
     # y_line = [yh[1] for i in 1:length(xh)]
@@ -110,6 +136,11 @@ function plot_heatmap_cross_section_line(fig, ax, xh, yh, da, TIME)
     return heatmap_line_plot
 end
 
+"""
+    build_line_axis(fig; row = 2)
+
+Build line plot axis.
+"""
 function build_line_axis(fig; row = 2)
     ax = Axis(
         fig[row, 2],
@@ -123,6 +154,11 @@ function build_line_axis(fig; row = 2)
     return ax
 end
 
+"""
+    plot_line(fig, ax, xh, da, TIME)
+
+Plot line plot for initial cross-section and timestep.
+"""
 function plot_line(fig, ax, xh, da, TIME)
     line = lines!(
         ax,

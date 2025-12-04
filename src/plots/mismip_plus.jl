@@ -4,7 +4,7 @@ using NCDatasets
 include("utils.jl")
 
 function build_heatmap_axis(fig; row = 1)
-    println("Row:", row)
+    @info "Row: $row"
     ax = Axis(
         fig[row, 2],
         xlabel = "x (km)",
@@ -196,12 +196,12 @@ function update_colorbar(files, heatmaps_vector, minval, maxval)
 end
 
 function update_colorbar_slider_range(colorbar_slider, minval, maxval)
-    println("Updating colorbar slider range to $(minval) to $(maxval)")
+    @debug "Updating colorbar slider range to $(minval) to $(maxval)"
     colorbar_slider.range[] = LinRange(minval, maxval, 1000)
 end
 
 function update_colorbar_slider_interval(colorbar_slider, minval, maxval)
-    println("Updating colorbar slider interval to $(minval) to $(maxval)")
+    @debug "Updating colorbar slider interval to $(minval) to $(maxval)"
     set_close_to!(colorbar_slider, minval, maxval)
 end
 
@@ -297,7 +297,7 @@ function plot_mismip_plus(files, output, format, dpi)
         display(fig)
     else
         save(output, fig)
-        println("Plot saved to: $output")
+        @info "Plot saved to: $output"
     end
 end
 

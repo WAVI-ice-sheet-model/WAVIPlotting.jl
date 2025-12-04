@@ -55,9 +55,9 @@ function wavi_plot_main(args=ARGS)
     format = parsed_args["format"]
     dpi = parsed_args["dpi"]
 
-    println("Plot type: $plot_type")
-    println("Files: $files")
-    println("Output: $output")
+    @info "Plot type: $plot_type"
+    @info "Files: $files"
+    @info "Output: $output"
 
     if plot_type == "mismip_plus"
         plot_mismip_plus(files, output, format, dpi)
@@ -65,7 +65,7 @@ function wavi_plot_main(args=ARGS)
         error("Unknown plot type: $plot_type")
     end
 
-    println("Press enter to close")
+    @info "Press enter to close"
     readline()
 end
 

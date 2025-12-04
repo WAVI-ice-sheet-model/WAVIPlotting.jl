@@ -149,7 +149,7 @@ function update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider
     empty!(axes[end])
     figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
     for (i, file) in enumerate(files)
-        axes[i].title = "File: `$file`"
+        axes[i].title = "File: $file"
         ds = Dataset(files[i])
         da = ds[varname]
         # Update heatmap
@@ -300,4 +300,3 @@ function plot_mismip_plus(files, output, format, dpi)
         @info "Plot saved to: $output"
     end
 end
-

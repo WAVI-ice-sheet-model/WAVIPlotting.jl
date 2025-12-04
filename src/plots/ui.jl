@@ -37,7 +37,7 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
 
     # Slider for selecting heatmap cross-section slice
     slider_layout = GridLayout(fig[1, 1])
-    Label(slider_layout[1, 1], "Cross-section slice", tellwidth = true, rotation = pi/2)
+    Label(slider_layout[1, 1], "Cross-section slice", tellwidth = true, tellheight = false, rotation = pi/2)
     y_slider = Slider(
         slider_layout[1, 2],
         range = 1:length(yh),

@@ -27,15 +27,8 @@ function parse_commandline()
         nargs = '+'
         required = true
         "--output", "-o"
-        help = "Output file path (default: plot.png)"
+        help = "Output image of plot file path (default: nothing), if nothing, show plot in interactive window"
         default = nothing
-        "--format", "-f"
-        help = "Output format (jpg, png, pdf, svg)"
-        default = "jpg"
-        "--dpi"
-        help = "DPI for raster outputs"
-        arg_type = Int
-        default = 300
     end
 
     return parse_args(s)
@@ -52,15 +45,13 @@ function wavi_plot_main(args = ARGS)
     plot_type = parsed_args["plot_type"]
     files = parsed_args["files"]
     output = parsed_args["output"]
-    format = parsed_args["format"]
-    dpi = parsed_args["dpi"]
 
     @info "Plot type: $plot_type"
     @info "Files: $files"
     @info "Output: $output"
 
     if plot_type == "mismip_plus"
-        plot_mismip_plus(files, output, format, dpi)
+        plot_mismip_plus(files, output)
     else
         error("Unknown plot type: $plot_type")
     end

@@ -1,7 +1,10 @@
 """
     get_clims(arr)
 
-Get data range for given array.
+Get min/max values from input array.
+
+# Arguments
+- `arr`: Input array.
 """
 get_clims(arr) = (minimum(arr), maximum(arr))
 
@@ -9,6 +12,14 @@ get_clims(arr) = (minimum(arr), maximum(arr))
     get_coords(ds)
 
 Get coordinates from netCDF dataset.
+
+# Arguments
+- `ds`: NetCDF dataset.
+
+# Returns
+- `xh`: x-coordinates.
+- `yh`: y-coordinates.
+- `TIME`: time-coordinates.
 """
 function get_coords(ds)
     xh = ds["x"][:] / 1e3

@@ -10,6 +10,9 @@ include("plots/mismip_plus.jl")
     parse_commandline()
 
 Parse command line arguments for wavi_plot.
+
+# Returns
+- `parsed_args`: Parsed command line arguments as a dictionary.
 """
 function parse_commandline()
     s = ArgParseSettings(
@@ -38,6 +41,9 @@ end
     wavi_plot_main(args=ARGS)
 
 Main entry point for the wavi_plot command-line tool.
+
+# Arguments
+- `args`: Command line arguments.
 """
 function wavi_plot_main(args = ARGS)
     parsed_args = parse_commandline()

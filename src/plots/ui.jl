@@ -3,6 +3,12 @@
     build_figure(; size = (1500, 700))
 
 Build and return figure object with a grid layout for heatmaps and line plot.
+
+# Keywords
+- `size`: Figure size.
+
+# Returns
+- `fig`: Figure object.
 """
 function build_figure(; size = (1500, 700))
     fig = Figure(size = size, layout = GridLayout(tellwidths = true))
@@ -13,6 +19,13 @@ end
     build_heatmap_axis(fig; row = 1)
 
 Build and return heatmap axis object.
+
+# Arguments
+- `fig`: The figure object.
+- `row=1`: The row of the grid where the heatmap will be placed.
+
+# Returns
+- `ax`: The heatmap axis object.
 """
 function build_heatmap_axis(fig; row = 1)
     @info "Row: $row"
@@ -31,6 +44,25 @@ end
     build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
 
 Build Makie interface for heatmaps and line plot.
+
+# Arguments
+- `fig`: The figure object.
+- `yh`: y-coordinates.
+- `TIME`: time-coordinates.
+- `varnames`: Available variable names for selection.
+
+# Keywords
+- `n_heatmaps=1`: Number of heatmaps to display.
+
+# Returns
+- `y_slider`: Slider for selecting heatmap cross-section slice.
+- `axes`: Array of axis objects.
+- `varname_menu`: Variable selection interactive menu.
+- `time_slider`: Timestep selection interactive slider.
+- `colorbar_slider`: Colorbar selection interactive slider.
+- `lock_toggle`: Lock toggle for colorbar range.
+- `min_label`: Minimum value label.
+- `max_label`: Maximum value label.
 """
 function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     slider_line_width = 15
@@ -107,11 +139,20 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
 end
 
 """
-    plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
+    plot_heatmap(ax, xh, yh, da)
 
 Plot heatmap for initial slice of variable.
+
+# Arguments
+- `ax`: Axis object.
+- `xh`: x-coordinates.
+- `yh`: y-coordinates.
+- `da`: Data array.
+
+# Returns
+- `heatmap`: Makie heatmap object.
 """
-function plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
+function plot_heatmap(ax, xh, yh, da)
     data0 = da[:, :, 1] # Initial slice
     clims = get_clims(data0)
 
@@ -129,11 +170,11 @@ function plot_heatmap(fig, ax, xh, yh, da, varname, TIME)
 end
 
 """
-    plot_heatmap_cross_section_line(fig, ax, xh, yh, da, TIME)
+    plot_heatmap_cross_section_line(ax, xh, yh)
 
 Plot cross-section line over first heatmap.
 """
-function plot_heatmap_cross_section_line(fig, ax, xh, yh, da, TIME)
+function plot_heatmap_cross_section_line(ax, xh, yh)
     # Line plot across a selected y-index (initially first y)
     # y_line = [yh[1] for i in 1:length(xh)]
     y_line = fill(yh[1], length(xh))
@@ -145,6 +186,15 @@ end
     build_line_axis(fig; row = 2)
 
 Build line plot axis.
+
+# Arguments
+- `fig`: Figure object.
+
+# Keywords
+- `row=2`: Row number.
+
+# Returns
+- `ax`: Axis object.
 """
 function build_line_axis(fig; row = 2)
     ax = Axis(
@@ -160,11 +210,19 @@ function build_line_axis(fig; row = 2)
 end
 
 """
-    plot_line(fig, ax, xh, da, TIME)
+    plot_line(ax, xh, da)
 
 Plot line plot for initial cross-section and timestep.
+
+# Arguments
+- `ax`: Axis object.
+- `xh`: x-coordinates.
+- `da`: Data array.
+
+# Returns
+- `line`: Makie line object.
 """
-function plot_line(fig, ax, xh, da, TIME)
+function plot_line(ax, xh, da)
     line = lines!(
         ax,
         xh,

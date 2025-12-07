@@ -8,6 +8,15 @@ include("ui.jl")
     get_arr_range(files, varname, t)
 
 Get data range for current timestep across all netCDF files.
+
+# Arguments
+- `files`: List of file paths to NetCDF datasets..
+- `varname`: Variable name to get range for.
+- `t`: Timestep index.
+
+# Returns
+- `minval`: Minimum value.
+- `maxval`: Maximum value.
 """
 function get_arr_range(files, varname, t)
     minval, maxval = floatmax(Float32), floatmin(Float32)
@@ -25,6 +34,14 @@ end
     get_global_limits(files, varname)
 
 Get global data range for given variable across all netCDF files.
+
+# Arguments
+- `files`: List of netCDF files.
+- `varname`: Variable name.
+
+# Returns
+- `minval`: Minimum value.
+- `maxval`: Maximum value.
 """
 function get_global_limits(files, varname)
     minval, maxval = floatmax(Float32), floatmin(Float32)
@@ -42,6 +59,23 @@ end
     update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = true)
 
 Update plot for given variable, timestep and y-index.
+
+# Arguments
+- `axes`: List of axes objects.
+- `files`: List of netCDF files.
+- `heatmaps_vector`: List of heatmap objects.
+- `heatmap_cbar`: Heatmap colorbar object.
+- `colorbar_slider`: Colorbar slider object.
+- `varname`: Variable name.
+- `xh`: x-coordinates.
+- `yh`: y-coordinates.
+- `TIME`: Time-coordinates.
+- `figure_title`: Figure title.
+
+# Keywords
+- `t`: Timestep.
+- `yidx`: y-index.
+- `update_limits=true`: Whether to update limits.
 """
 function update_plot(
     axes,
@@ -105,6 +139,12 @@ end
     update_colorbar(files, heatmaps_vector, minval, maxval)
 
 Update heatmap color ranges.
+
+# Arguments
+- `files`: List of netCDF files.
+- `heatmaps_vector`: List of heatmap objects.
+- `minval`: Minimum value.
+- `maxval`: Maximum value.
 """
 function update_colorbar(files, heatmaps_vector, minval, maxval)
     for (i, file) in enumerate(files)
@@ -116,6 +156,11 @@ end
     update_colorbar_slider_range(colorbar_slider, minval, maxval)
 
 Update colorbar slider range.
+
+# Arguments
+- `colorbar_slider`: Colorbar slider object.
+- `minval`: Minimum value.
+- `maxval`: Maximum value.
 """
 function update_colorbar_slider_range(colorbar_slider, minval, maxval)
     @debug "Updating colorbar slider range to $(minval) to $(maxval)"
@@ -126,6 +171,11 @@ end
     update_colorbar_slider_interval(colorbar_slider, minval, maxval)
 
 Update colorbar slider interval.
+
+# Arguments
+- `colorbar_slider`: Colorbar slider object.
+- `minval`: Minimum value.
+- `maxval`: Maximum value.
 """
 function update_colorbar_slider_interval(colorbar_slider, minval, maxval)
     @debug "Updating colorbar slider interval to $(minval) to $(maxval)"
@@ -136,6 +186,12 @@ end
     plot_mismip_plus(files; output = nothing)
 
 Plot MISMIP+ results.
+
+# Arguments
+- `files`: List of netCDF files.
+
+# Keywords
+- `output=nothing`: Output file path to save the plot. If nothing, the plot will be displayed in an interactive window.
 """
 function plot_mismip_plus(files; output = nothing)
     ds = Dataset(files[1])
@@ -167,7 +223,7 @@ function plot_mismip_plus(files; output = nothing)
     heatmaps_vector = []
 
     for (i, file) in enumerate(files)
-        heatmap = plot_heatmap(fig, axes[i], xh, yh, da, varname, TIME)
+        heatmap = plot_heatmap(axes[i], xh, yh, da)
         push!(heatmaps_vector, heatmap)
     end
 
@@ -177,8 +233,8 @@ function plot_mismip_plus(files; output = nothing)
     heatmap_cbar =
         Colorbar(fig[1:length(files), 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
-    heatmap_line_plot = plot_heatmap_cross_section_line(fig, axes[1], xh, yh, da, TIME)
-    line = plot_line(fig, axes[end], xh, da, TIME)
+    heatmap_line_plot = plot_heatmap_cross_section_line(axes[1], xh, yh)
+    line = plot_line(axes[end], xh, da)
 
     figure_title = Label(
         fig[0, :],

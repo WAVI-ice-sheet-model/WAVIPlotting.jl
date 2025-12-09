@@ -152,7 +152,7 @@ Plot heatmap for initial slice of variable.
 # Returns
 - `heatmap`: Makie heatmap object.
 """
-function plot_heatmap(ax::Axis, xh::Vector{Float64}, yh::Vector{Float64}, da::Array{Float64, 3})::Heatmap
+function plot_heatmap(ax::Axis, xh::Vector{Float64}, yh::Vector{Float64}, da)::Heatmap
     data0 = da[:, :, 1] # Initial slice
     clims = get_clims(data0)
 

@@ -48,9 +48,9 @@ Main entry point for the wavi_plot command-line tool.
 function wavi_plot_main(args = ARGS)
     parsed_args = parse_commandline()
 
-    plot_type = parsed_args["plot_type"]
-    files = parsed_args["files"]
-    output = parsed_args["output"]
+    plot_type::String = parsed_args["plot_type"]
+    files::Vector{String} = parsed_args["files"]
+    output::Union{Nothing, String} = parsed_args["output"]
 
     @info "Plot type: $plot_type"
     @info "Files: $files"

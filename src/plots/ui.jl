@@ -41,7 +41,7 @@ function build_heatmap_axis(fig; row = 1)
 end
 
 """
-    build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
+    build_interface(fig::Figure, yh::Vector{Float64}, TIME::Vector{Float64}, varnames::Vector{String}; n_heatmaps::Int = 1)
 
 Build Makie interface for heatmaps and line plot.
 
@@ -64,22 +64,22 @@ Build Makie interface for heatmaps and line plot.
 - `min_label`: Minimum value label.
 - `max_label`: Maximum value label.
 """
-function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
-    slider_line_width = 15
+function build_interface(fig::Figure, yh::Vector{Float64}, TIME::Vector{Float64}, varnames::Vector{String}; n_heatmaps::Int = 1)
+    slider_line_width::Int = 15
 
     # Slider for selecting heatmap cross-section slice
     slider_layout = GridLayout(fig[1, 1])
     Label(slider_layout[1, 1], "Cross-section slice", tellwidth = true, tellheight = false, rotation = pi/2)
-    y_slider = Slider(
+    y_slider::Slider = Slider(
         slider_layout[1, 2],
         range = 1:length(yh),
         startvalue = 1,
         horizontal = false,
         linewidth = slider_line_width,
     )
-    axes = []
+    axes::Vector{Axis} = []
     # Build a heatmap axis per netCDF file
-    for i = 1:n_heatmaps
+    for i::Int = 1:n_heatmaps
         push!(axes, build_heatmap_axis(fig; row = i))
     end
     # Set last axis to be the cross-sectional line plot
@@ -100,7 +100,7 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
     menu_layout = GridLayout(tellwidths = true)
     fig[n_heatmaps+2, 2] = menu_layout # Using this to match the layout of the slider grid
     Label(menu_layout[1, 1], "Variable", tellwidth = true)
-    varname_menu = Menu(menu_layout[1, 2], options = varnames, default = varnames[1])
+    varname_menu::Menu = Menu(menu_layout[1, 2], options = varnames, default = varnames[1])
 
     slider_grid = SliderGrid(
         fig[n_heatmaps+3, 2],
@@ -114,18 +114,18 @@ function build_interface(fig, yh, TIME, varnames; n_heatmaps = 1)
         tellheight = true,
     )
 
-    time_slider = slider_grid.sliders[1]
+    time_slider::Slider = slider_grid.sliders[1]
 
     # Create a sub-layout for the slider and toggle
     slider_layout = GridLayout(fig[n_heatmaps+4, 2])
 
     Label(slider_layout[1, 1], "Colourbar", tellwidth = true)
-    min_label = Label(slider_layout[1, 2], tellwidth = true)
-    colorbar_slider = IntervalSlider(slider_layout[1, 3], linewidth = slider_line_width)
-    max_label = Label(slider_layout[1, 4], tellwidth = true)
+    min_label::Label = Label(slider_layout[1, 2], tellwidth = true)
+    colorbar_slider::IntervalSlider = IntervalSlider(slider_layout[1, 3], linewidth = slider_line_width)
+    max_label::Label = Label(slider_layout[1, 4], tellwidth = true)
 
     # Add toggle to lock the range
-    lock_toggle = Toggle(slider_layout[1, 5], active = false)
+    lock_toggle::Toggle = Toggle(slider_layout[1, 5], active = false)
     Label(slider_layout[1, 6], "Lock over timesteps")
 
     return y_slider,
@@ -152,7 +152,7 @@ Plot heatmap for initial slice of variable.
 # Returns
 - `heatmap`: Makie heatmap object.
 """
-function plot_heatmap(ax, xh, yh, da)
+function plot_heatmap(ax::Axis, xh::Vector{Float64}, yh::Vector{Float64}, da::Array{Float64, 3})::Heatmap
     data0 = da[:, :, 1] # Initial slice
     clims = get_clims(data0)
 
@@ -174,7 +174,7 @@ end
 
 Plot cross-section line over first heatmap.
 """
-function plot_heatmap_cross_section_line(ax, xh, yh)
+function plot_heatmap_cross_section_line(ax::Axis, xh::Vector{Float64}, yh::Vector{Float64})::Lines
     # Line plot across a selected y-index (initially first y)
     # y_line = [yh[1] for i in 1:length(xh)]
     y_line = fill(yh[1], length(xh))
@@ -183,7 +183,7 @@ function plot_heatmap_cross_section_line(ax, xh, yh)
 end
 
 """
-    build_line_axis(fig; row = 2)
+    build_line_axis(fig::Figure; row::Int = 2)::Axis
 
 Build line plot axis.
 
@@ -196,7 +196,7 @@ Build line plot axis.
 # Returns
 - `ax`: Axis object.
 """
-function build_line_axis(fig; row = 2)
+function build_line_axis(fig::Figure; row::Int = 2)::Axis
     ax = Axis(
         fig[row, 2],
         xlabel = "x (km)",
@@ -222,7 +222,7 @@ Plot line plot for initial cross-section and timestep.
 # Returns
 - `line`: Makie line object.
 """
-function plot_line(ax, xh, da)
+function plot_line(ax::Axis, xh::Vector{Float64}, da::Array{Float64, 3})::Lines
     line = lines!(
         ax,
         xh,

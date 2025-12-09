@@ -56,7 +56,7 @@ function get_global_limits(files, varname)
 end
 
 """
-    update_plot(axes, files, heatmaps_vector, heatmap_cbar, colorbar_slider, varname, xh, yh, TIME, figure_title; t, yidx, update_limits = true)
+    update_plot(axes::Vector{Axis}, files::Vector{String}, heatmaps_vector::Vector{Heatmap}, heatmap_cbar::Colorbar, colorbar_slider::Slider, varname::String, xh::Vector{Float64}, yh::Vector{Float64}, TIME::Vector{Float64}, figure_title::Label; t::Int, yidx::Int, update_limits::Bool = true)
 
 Update plot for given variable, timestep and y-index.
 
@@ -78,31 +78,31 @@ Update plot for given variable, timestep and y-index.
 - `update_limits=true`: Whether to update limits.
 """
 function update_plot(
-    axes,
-    files,
-    heatmaps_vector,
-    heatmap_cbar,
-    colorbar_slider,
-    varname,
-    xh,
-    yh,
-    TIME,
-    figure_title;
-    t,
-    yidx,
-    update_limits = true,
+    axes::Vector{Axis},
+    files::Vector{String},
+    heatmaps_vector::Vector{Heatmap},
+    heatmap_cbar::Colorbar,
+    colorbar_slider::IntervalSlider,
+    varname::String,
+    xh::Vector{Float64},
+    yh::Vector{Float64},
+    TIME::Vector{Float64},
+    figure_title::Label;
+    t::Int,
+    yidx::Int,
+    update_limits::Bool = true,
 )
     empty!(axes[end])
     figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
     for (i, file) in enumerate(files)
         axes[i].title = "File: $file"
-        ds = Dataset(files[i])
-        da = ds[varname]
+        ds::Dataset = Dataset(files[i])
+        da::Array{Float64, 3} = ds[varname]
         # Update heatmap
         heatmaps_vector[i][3][] = @view da[:, :, t]
 
         # Update bottom line axis to reflect new time selection
-        line = lines!(
+        line::Lines = lines!(
             axes[end],
             xh,
             da[:, yidx, t],
@@ -113,7 +113,7 @@ function update_plot(
     end
 
     # Get data range for current timestep
-    curr_min, curr_max = get_arr_range(files, varname, t)
+    curr_min::Float64, curr_max::Float64 = get_arr_range(files, varname, t)
 
     axes[end].ylabel = "$varname"
     heatmap_cbar.label = "$varname"
@@ -136,7 +136,7 @@ function update_plot(
 end
 
 """
-    update_colorbar(files, heatmaps_vector, minval, maxval)
+    update_colorbar(files::Vector{String}, heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
 
 Update heatmap color ranges.
 
@@ -146,14 +146,14 @@ Update heatmap color ranges.
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function update_colorbar(files, heatmaps_vector, minval, maxval)
+function update_colorbar(files::Vector{String}, heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
     for (i, file) in enumerate(files)
         heatmaps_vector[i].colorrange[] = (minval, maxval)
     end
 end
 
 """
-    update_colorbar_slider_range(colorbar_slider, minval, maxval)
+    update_colorbar_slider_range(colorbar_slider::IntervalSlider, minval::Float64, maxval::Float64)
 
 Update colorbar slider range.
 
@@ -162,13 +162,13 @@ Update colorbar slider range.
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function update_colorbar_slider_range(colorbar_slider, minval, maxval)
+function update_colorbar_slider_range(colorbar_slider::IntervalSlider, minval::Float64, maxval::Float64)
     @debug "Updating colorbar slider range to $(minval) to $(maxval)"
     colorbar_slider.range[] = LinRange(minval, maxval, 1000)
 end
 
 """
-    update_colorbar_slider_interval(colorbar_slider, minval, maxval)
+    update_colorbar_slider_interval(colorbar_slider::IntervalSlider, minval::Float64, maxval::Float64)
 
 Update colorbar slider interval.
 
@@ -177,13 +177,13 @@ Update colorbar slider interval.
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function update_colorbar_slider_interval(colorbar_slider, minval, maxval)
+function update_colorbar_slider_interval(colorbar_slider::IntervalSlider, minval::Float64, maxval::Float64)
     @debug "Updating colorbar slider interval to $(minval) to $(maxval)"
     set_close_to!(colorbar_slider, minval, maxval)
 end
 
 """
-    plot_mismip_plus(files; output = nothing)
+    plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} = nothing)
 
 Plot MISMIP+ results.
 
@@ -193,20 +193,21 @@ Plot MISMIP+ results.
 # Keywords
 - `output=nothing`: Output file path to save the plot. If nothing, the plot will be displayed in an interactive window.
 """
-function plot_mismip_plus(files; output = nothing)
-    ds = Dataset(files[1])
+function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} = nothing)
+    ds::Dataset = Dataset(files[1])
 
-    fig_width = 1500
-    fig_height = 350 * (length(files) + 1)
+    fig_width::Int = 1500
+    fig_height::Int = 350 * (length(files) + 1)
 
     # Filter out variables that are not 3D
-    varnames = filter(x -> ndims(ds[x]) == 3, keys(ds))
+    varnames::Vector{String} = filter(x -> ndims(ds[x]) == 3, keys(ds))
 
-    xh, yh, TIME = get_coords(ds)
+    xh::Vector{Float64}, yh::Vector{Float64}, TIME::Vector{Float64} = get_coords(ds)
 
-    nt = length(TIME)
+    nt::Int = length(TIME)
 
-    fig = build_figure(; size = (fig_width, fig_height))
+    fig::Figure = build_figure(; size = (fig_width, fig_height))
+
     y_slider,
     axes,
     varname_menu,
@@ -217,13 +218,13 @@ function plot_mismip_plus(files; output = nothing)
     max_label = build_interface(fig, yh, TIME, varnames; n_heatmaps = length(files))
 
     # Initialise plots
-    varname = varnames[1]
-    da = ds[varname]
+    varname::String = varnames[1]
+    da::Array{Float64, 3} = ds[varname]
 
-    heatmaps_vector = []
+    heatmaps_vector::Vector{Heatmap} = []
 
     for (i, file) in enumerate(files)
-        heatmap = plot_heatmap(axes[i], xh, yh, da)
+        heatmap::Heatmap = plot_heatmap(axes[i], xh, yh, da)
         push!(heatmaps_vector, heatmap)
     end
 
@@ -233,21 +234,21 @@ function plot_mismip_plus(files; output = nothing)
     heatmap_cbar =
         Colorbar(fig[1:length(files), 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
-    heatmap_line_plot = plot_heatmap_cross_section_line(axes[1], xh, yh)
-    line = plot_line(axes[end], xh, da)
+    heatmap_line_plot::Lines = plot_heatmap_cross_section_line(axes[1], xh, yh)
+    line::Lines = plot_line(axes[end], xh, da)
 
-    figure_title = Label(
+    figure_title::Label = Label(
         fig[0, :],
         "$varname at time = $(round(TIME[time_slider.value[]], digits=2))",
         fontsize = 30,
     )
 
     # Initialise slider range with global limits
-    global_min, global_max = get_global_limits(files, varname)
+    global_min::Float64, global_max::Float64 = get_global_limits(files, varname)
     update_colorbar_slider_range(colorbar_slider, global_min, global_max)
 
     ## Colourbar range setting callback
-    on(colorbar_slider.interval) do t
+    on(colorbar_slider.interval) do t::Tuple{Float64, Float64}
         min_label.text = string(round(t[1], digits = 2))
         max_label.text = string(round(t[2], digits = 2))
         update_colorbar(files, heatmaps_vector, t[1], t[2])
@@ -278,9 +279,9 @@ function plot_mismip_plus(files; output = nothing)
 
     # Menu callbacks
     ## Selecting variable
-    on(varname_menu.selection) do varname
-        t = time_slider.value[]
-        yidx = y_slider.value[]
+    on(varname_menu.selection) do varname::String
+        t::Int = time_slider.value[]
+        yidx::Int = y_slider.value[]
 
         # Update slider range to new variable's global limits
         global_min, global_max = get_global_limits(files, varname)
@@ -307,9 +308,9 @@ function plot_mismip_plus(files; output = nothing)
 
     # Slider callbacks
     ## y slider callback
-    on(y_slider.value) do yidx
+    on(y_slider.value) do yidx::Int
         varname = varname_menu.selection[]
-        t = time_slider.value[]
+        t::Int = time_slider.value[]
 
         # Update red horizontal line on heatmap
         y_line = fill(yh[yidx], length(xh))
@@ -332,9 +333,9 @@ function plot_mismip_plus(files; output = nothing)
         )
     end
     ## time slider callback
-    on(time_slider.value) do t
+    on(time_slider.value) do t::Int
         varname = varname_menu.selection[]
-        yidx = y_slider.value[]
+        yidx::Int = y_slider.value[]
 
         update_plot(
             axes,

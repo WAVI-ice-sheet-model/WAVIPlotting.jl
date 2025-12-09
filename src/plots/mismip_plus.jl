@@ -164,7 +164,7 @@ Update colorbar slider range.
 """
 function update_colorbar_slider_range(colorbar_slider::IntervalSlider, minval::Float64, maxval::Float64)
     @debug "Updating colorbar slider range to $(minval) to $(maxval)"
-    colorbar_slider.range[] = LinRange(minval, maxval, 1000)
+    colorbar_slider.range[] = LinRange(minval, maxval, 300)
 end
 
 """
@@ -283,9 +283,11 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
         t::Int = time_slider.value[]
         yidx::Int = y_slider.value[]
 
-        # Update slider range to new variable's global limits
-        global_min, global_max = get_global_limits(files, varname)
-        update_colorbar_slider_range(colorbar_slider, global_min, global_max)
+        if !lock_toggle.active[]
+            # Update slider range to new variable's global limits
+            global_min, global_max = get_global_limits(files, varname)
+            update_colorbar_slider_range(colorbar_slider, global_min, global_max)
+        end
 
         update_plot(
             axes,

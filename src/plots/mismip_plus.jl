@@ -1,5 +1,6 @@
 using GLMakie
 using NCDatasets
+using SkipNan
 
 include("utils.jl")
 include("ui.jl")
@@ -45,8 +46,10 @@ function get_global_limits(datasets, varname)
     minval, maxval = floatmax(Float32), floatmin(Float32)
     for ds in datasets
         v = ds[varname]
-        minval = min(minval, minimum(v))
-        maxval = max(maxval, maximum(v))
+        local_min = minimum(skipnan(v))
+        local_max = maximum(skipnan(v))
+        minval = min(minval, local_min)
+        maxval = max(maxval, local_max)
     end
     return minval, maxval
 end
@@ -228,7 +231,7 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
 
     # Add Colourbar
     ## Round float tick values to int (stops axes moving around)
-    int_tick(x) = string.(round.(Int, x))
+    int_tick(x) = string.([ isnan(v) ? "NaN" : round(Int, v) for v in x ])
     heatmap_cbar =
         Colorbar(fig[1:length(files), 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 

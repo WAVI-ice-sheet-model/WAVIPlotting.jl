@@ -1,16 +1,17 @@
 using GLMakie
 using NCDatasets
+using SkipNan
 
 include("utils.jl")
 include("ui.jl")
 
 """
-    get_arr_range(files, varname, t)
+    get_arr_range(datasets, varname, t)
 
 Get data range for current timestep across all netCDF files.
 
 # Arguments
-- `files`: List of file paths to NetCDF datasets..
+- `datasets`: List of NetCDF datasets.
 - `varname`: Variable name to get range for.
 - `t`: Timestep index.
 
@@ -18,52 +19,51 @@ Get data range for current timestep across all netCDF files.
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function get_arr_range(files, varname, t)
+function get_arr_range(datasets, varname, t)
     minval, maxval = floatmax(Float32), floatmin(Float32)
-    for file in files
-        ds = Dataset(file)
-        da = ds[varname]
-
-        minval = min(minval, minimum(@view da[:, :, t]))
-        maxval = max(maxval, maximum(@view da[:, :, t]))
+    for ds in datasets
+        slice = ds[varname][:, :, t]
+        minval = min(minval, minimum(slice))
+        maxval = max(maxval, maximum(slice))
     end
     return minval, maxval
 end
 
 """
-    get_global_limits(files, varname)
+    get_global_limits(datasets, varname)
 
 Get global data range for given variable across all netCDF files.
 
 # Arguments
-- `files`: List of netCDF files.
+- `datasets`: List of NetCDF datasets.
 - `varname`: Variable name.
 
 # Returns
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function get_global_limits(files, varname)
+function get_global_limits(datasets, varname)
     minval, maxval = floatmax(Float32), floatmin(Float32)
-    for file in files
-        ds = Dataset(file)
-        da = ds[varname]
-        # Compute global min/max for this variable across all time
-        minval = min(minval, minimum(da))
-        maxval = max(maxval, maximum(da))
+    for ds in datasets
+        v = ds[varname]
+        local_min = minimum(skipnan(v))
+        local_max = maximum(skipnan(v))
+        minval = min(minval, local_min)
+        maxval = max(maxval, local_max)
     end
     return minval, maxval
 end
 
 """
-    update_plot(axes::Vector{Axis}, files::Vector{String}, heatmaps_vector::Vector{Heatmap}, heatmap_cbar::Colorbar, colorbar_slider::Slider, varname::String, xh::Vector{Float64}, yh::Vector{Float64}, TIME::Vector{Float64}, figure_title::Label; t::Int, yidx::Int, update_limits::Bool = true)
+    update_plot(axes::Vector{Axis}, datasets, heatmaps_vector::Vector{Heatmap}, line_observables::Vector{Observable}, heatmap_cbar::Colorbar, colorbar_slider::Slider, varname::String, xh::Vector{Float64}, yh::Vector{Float64}, TIME::Vector{Float64}, figure_title::Label; t::Int, yidx::Int, update_limits::Bool = true)
 
 Update plot for given variable, timestep and y-index.
 
 # Arguments
 - `axes`: List of axes objects.
-- `files`: List of netCDF files.
+- `datasets`: List of NetCDF datasets.
 - `heatmaps_vector`: List of heatmap objects.
+- `line_observables`: List of line observables.
 - `heatmap_cbar`: Heatmap colorbar object.
 - `colorbar_slider`: Colorbar slider object.
 - `varname`: Variable name.
@@ -79,8 +79,9 @@ Update plot for given variable, timestep and y-index.
 """
 function update_plot(
     axes::Vector{Axis},
-    files::Vector{String},
+    datasets,
     heatmaps_vector::Vector{Heatmap},
+    line_observables::Vector{Observable},
     heatmap_cbar::Colorbar,
     colorbar_slider::IntervalSlider,
     varname::String,
@@ -92,28 +93,26 @@ function update_plot(
     yidx::Int,
     update_limits::Bool = true,
 )
-    empty!(axes[end])
     figure_title.text = "$varname at timestep = $(round(TIME[t], digits = 2))"
-    for (i, file) in enumerate(files)
-        axes[i].title = "File: $file"
-        ds::Dataset = Dataset(files[i])
-        da::Array{Float64, 3} = ds[varname]
-        # Update heatmap
-        heatmaps_vector[i][3][] = @view da[:, :, t]
+    curr_min, curr_max = floatmax(Float32), floatmin(Float32)
+    for (i, ds) in enumerate(datasets)
+        # Read only the slice
+        slice = ds[varname][:, :, t]
 
-        # Update bottom line axis to reflect new time selection
-        line::Lines = lines!(
-            axes[end],
-            xh,
-            da[:, yidx, t],
-            label = files[i],
-            #color = :red,
-            linewidth = 2,
-        )
+        # Update heatmap
+        heatmaps_vector[i][3][] = slice
+
+        # Update bottom line axis
+        # Update the observable for the line
+        line_observables[i][] = ds[varname][:, yidx, t]
+
+        # Update min/max
+        curr_min = min(curr_min, minimum(slice))
+        curr_max = max(curr_max, maximum(slice))
     end
 
-    # Get data range for current timestep
-    curr_min::Float64, curr_max::Float64 = get_arr_range(files, varname, t)
+    # Rescale y-axis for the line plot
+    autolimits!(axes[end])
 
     axes[end].ylabel = "$varname"
     heatmap_cbar.label = "$varname"
@@ -136,19 +135,18 @@ function update_plot(
 end
 
 """
-    update_colorbar(files::Vector{String}, heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
+    update_colorbar(heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
 
 Update heatmap color ranges.
 
 # Arguments
-- `files`: List of netCDF files.
 - `heatmaps_vector`: List of heatmap objects.
 - `minval`: Minimum value.
 - `maxval`: Maximum value.
 """
-function update_colorbar(files::Vector{String}, heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
-    for (i, file) in enumerate(files)
-        heatmaps_vector[i].colorrange[] = (minval, maxval)
+function update_colorbar(heatmaps_vector::Vector{Heatmap}, minval::Float64, maxval::Float64)
+    for heatmap in heatmaps_vector
+        heatmap.colorrange[] = (minval, maxval)
     end
 end
 
@@ -194,7 +192,8 @@ Plot MISMIP+ results.
 - `output=nothing`: Output file path to save the plot. If nothing, the plot will be displayed in an interactive window.
 """
 function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} = nothing)
-    ds::Dataset = Dataset(files[1])
+    datasets::Vector{Dataset} = [Dataset(f) for f in files] # Open datasets once
+    ds = datasets[1]
 
     fig_width::Int = 1500
     fig_height::Int = 350 * (length(files) + 1)
@@ -219,23 +218,34 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
 
     # Initialise plots
     varname::String = varnames[1]
-    da::Array{Float64, 3} = ds[varname]
 
     heatmaps_vector::Vector{Heatmap} = []
 
-    for (i, file) in enumerate(files)
-        heatmap::Heatmap = plot_heatmap(axes[i], xh, yh, da)
+    for (i, ds_i) in enumerate(datasets)
+        # Initial slice
+        data0 = ds_i[varname][:, :, 1]
+        heatmap::Heatmap = plot_heatmap(axes[i], xh, yh, data0)
         push!(heatmaps_vector, heatmap)
+        axes[i].title = "File: $(files[i])"
     end
 
     # Add Colourbar
     ## Round float tick values to int (stops axes moving around)
-    int_tick(x) = string.(round.(Int, x))
+    int_tick(x) = string.([ isnan(v) ? "NaN" : round(Int, v) for v in x ])
     heatmap_cbar =
         Colorbar(fig[1:length(files), 3], heatmaps_vector[1]; tickformat = int_tick, label = varname)
 
     heatmap_line_plot::Lines = plot_heatmap_cross_section_line(axes[1], xh, yh)
-    line::Lines = plot_line(axes[end], xh, da)
+
+    # Initialise line plots with Observables
+    line_observables::Vector{Observable} = []
+    for (i, ds_i) in enumerate(datasets)
+        # Initial line data
+        line_data = ds_i[varname][:, 1, 1]
+        obs = Observable(line_data)
+        push!(line_observables, obs)
+        lines!(axes[end], xh, obs, label = files[i], linewidth = 2)
+    end
 
     figure_title::Label = Label(
         fig[0, :],
@@ -244,20 +254,21 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
     )
 
     # Initialise slider range with global limits
-    global_min::Float64, global_max::Float64 = get_global_limits(files, varname)
+    global_min::Float64, global_max::Float64 = get_global_limits(datasets, varname)
     update_colorbar_slider_range(colorbar_slider, global_min, global_max)
 
     ## Colourbar range setting callback
     on(colorbar_slider.interval) do t::Tuple{Float64, Float64}
         min_label.text = string(round(t[1], digits = 2))
         max_label.text = string(round(t[2], digits = 2))
-        update_colorbar(files, heatmaps_vector, t[1], t[2])
+        update_colorbar(heatmaps_vector, t[1], t[2])
     end
 
     update_plot(
         axes,
-        files,
+        datasets,
         heatmaps_vector,
+        line_observables,
         heatmap_cbar,
         colorbar_slider,
         varname,
@@ -285,14 +296,15 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
 
         if !lock_toggle.active[]
             # Update slider range to new variable's global limits
-            global_min, global_max = get_global_limits(files, varname)
+            global_min, global_max = get_global_limits(datasets, varname)
             update_colorbar_slider_range(colorbar_slider, global_min, global_max)
         end
 
         update_plot(
             axes,
-            files,
+            datasets,
             heatmaps_vector,
+            line_observables,
             heatmap_cbar,
             colorbar_slider,
             varname,
@@ -304,8 +316,6 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
             yidx,
             update_limits = true,
         )
-        #minval, maxval = get_arr_range(files, varname, t)
-        #println(minval, "\t", maxval)
     end
 
     # Slider callbacks
@@ -320,8 +330,9 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
 
         update_plot(
             axes,
-            files,
+            datasets,
             heatmaps_vector,
+            line_observables,
             heatmap_cbar,
             colorbar_slider,
             varname,
@@ -341,8 +352,9 @@ function plot_mismip_plus(files::Vector{String}; output::Union{Nothing, String} 
 
         update_plot(
             axes,
-            files,
+            datasets,
             heatmaps_vector,
+            line_observables,
             heatmap_cbar,
             colorbar_slider,
             varname,
